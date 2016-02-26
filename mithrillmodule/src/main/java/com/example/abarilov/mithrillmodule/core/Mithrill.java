@@ -63,13 +63,6 @@ public interface Mithrill {
         public Todo done(O o) {
             return null;
         }
-    }
-
-
-}
-
-    Todo TODO = new TodoImpl()
-            .description("des")
-            .done(true);
+    }   
 }
 
