@@ -16,14 +16,14 @@
 
 package com.camino.lib.provider.lyve.request;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class SearchRequest {
-
     @SerializedName("path")
     @Expose
-    public String path;
+    public String path = "";
     @SerializedName("query")
     @Expose
     public String query;
@@ -32,16 +32,21 @@ public class SearchRequest {
     public Integer start;
     @SerializedName("max_results")
     @Expose
-    public Integer maxResults;
+    public Integer maxResults = 1024;
     @SerializedName("mode")
     @Expose
-    public String mode;
+    public String mode = "filename";
+    @SerializedName("include_media_info")
+    @Expose
+    public boolean includeMediaInfo;
+    @SerializedName("include_full_path")
+    @Expose
+    public boolean includeFullPath;
 
     public SearchRequest withPath(String path) {
         this.path = path;
         return this;
     }
-
     public SearchRequest withQuery(String query) {
         this.query = query;
         return this;

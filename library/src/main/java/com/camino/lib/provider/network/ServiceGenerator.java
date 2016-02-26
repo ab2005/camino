@@ -18,7 +18,6 @@ package com.camino.lib.provider.network;
 
 import com.camino.lib.provider.dropbox.DbxCloudClient;
 import com.camino.lib.provider.lyve.LyveCloudClient;
-import com.facebook.stetho.okhttp3.StethoInterceptor;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
@@ -51,8 +50,8 @@ public class ServiceGenerator {
     public static <S> S createService(String baseUrl, Class<S> serviceClass, final String authToken) {
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
 //                .connectionPool(new ConnectionPool(MAX_CONNECTIONS, 5, TimeUnit.MINUTES))
-                .readTimeout(READ_TIMEOUT_SEC, TimeUnit.SECONDS)
-                .addInterceptor(new StethoInterceptor());
+                .readTimeout(READ_TIMEOUT_SEC, TimeUnit.SECONDS);
+//                .addInterceptor(new StethoInterceptor());
 //                .sslSocketFactory(SSLConfig.getSSLSocketFactory());
 
         if (authToken != null) {
@@ -71,8 +70,8 @@ public class ServiceGenerator {
         }
 
         OkHttpClient client = httpClientBuilder.build();
-        client.dispatcher().setMaxRequestsPerHost(MAX_CONNECTIONS);
-        client.dispatcher().setMaxRequests(MAX_CONNECTIONS * 2);
+//        client.dispatcher().setMaxRequestsPerHost(MAX_CONNECTIONS);
+//        client.dispatcher().setMaxRequests(MAX_CONNECTIONS * 2);
         Retrofit.Builder builder =
                 new Retrofit.Builder()
                         .baseUrl(baseUrl)

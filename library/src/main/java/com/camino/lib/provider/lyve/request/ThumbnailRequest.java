@@ -2,7 +2,7 @@
  * Copyright (c) 2015. Seagate Technology PLC. All rights reserved.
  */
 
-package com.seagate.alto.provider.lyve.request;
+package com.camino.lib.provider.lyve.request;
 
 import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;

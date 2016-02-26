@@ -28,7 +28,7 @@ public class MediaMetadata implements Provider.MediaMetadata {
 
     @SerializedName(".tag")
     @Expose
-    public String Tag;
+    public String tag;
     @SerializedName("dimensions")
     @Expose
     public Dimensions dimensions;

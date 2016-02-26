@@ -17,6 +17,7 @@
 package com.camino.lib.provider.lyve.request;
 
 import com.camino.lib.provider.lyve.annotation.Generated;
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 

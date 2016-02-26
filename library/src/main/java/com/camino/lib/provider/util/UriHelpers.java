@@ -45,11 +45,16 @@ public final class UriHelpers {
      * @return The file with path pointing to the saved file. It can return null if we can't resolve the uri properly.
      */
     public static File getFileForUri(final Context context, final Uri uri) {
+
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.KITKAT) {
+            return null;
+        }
+
         String scheme = uri.getScheme();
 
         String path = null;
         // DocumentProvider
-        if ((Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) && DocumentsContract.isDocumentUri(context, uri)) {
+        if (DocumentsContract.isDocumentUri(context, uri)) {
             // ExternalStorageProvider
             if (isExternalStorageDocument(uri)) {
                 final String docId = DocumentsContract.getDocumentId(uri);
@@ -120,7 +125,8 @@ public final class UriHelpers {
 
         if (isDownloadsDocument(uri)) {
             // DownloadsProvider
-            final Uri contentUri = ContentUris.withAppendedId(Uri.parse("content://downloads/public_downloads"), Long.valueOf(docId));
+            Uri base = Uri.parse("content://downloads/public_downloads");
+            final Uri contentUri = ContentUris.withAppendedId(base, Long.valueOf(docId));
             return getDataColumn(context, contentUri, null, null);
         }
 

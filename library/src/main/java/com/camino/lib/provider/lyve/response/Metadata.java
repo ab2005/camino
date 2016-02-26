@@ -42,7 +42,7 @@ public class Metadata implements Provider.FileMetadata {
     public String pathLower;
     @SerializedName(".tag")
     @Expose
-    public String Tag;
+    public String tag;
     @SerializedName("client_modified")
     @Expose
     public String clientModified;

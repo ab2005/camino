@@ -20,6 +20,7 @@ import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.camino.lib.provider.Provider;
 import com.camino.lib.provider.dropbox.DbxProvider;
 import com.camino.lib.provider.imagepipeline.OkHttpNetworkFetcher;
 import com.dropbox.core.DbxDownloader;
@@ -36,10 +37,10 @@ public class DbxFilesDownloadCall implements OkHttpNetworkFetcher.Call {
     private final DbxProvider provider;
     private DbxDownloader<DbxFiles.FileMetadata> downloader = null;
 
-    DbxFilesDownloadCall(final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState, final NetworkFetcher.Callback callback, DbxProvider provider) {
+    public DbxFilesDownloadCall(final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState, final NetworkFetcher.Callback callback, Provider provider) {
         this.fetchState = fetchState;
         this.callback = callback;
-        this.provider = provider;
+        this.provider = (DbxProvider) provider;
     }
 
     @Override

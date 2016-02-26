@@ -27,7 +27,7 @@ public class MediaInfo implements Provider.MediaInfo {
 
     @SerializedName(".tag")
     @Expose
-    public String Tag;
+    public String tag;
     @SerializedName("metadata")
     @Expose
     public MediaMetadata metadata;
@@ -36,7 +36,7 @@ public class MediaInfo implements Provider.MediaInfo {
     public
     @Nullable
     Provider.MediaInfo.Tag tag() {
-        switch (Tag) {
+        switch (tag) {
             case "metadata":
                 return Provider.MediaInfo.Tag.metadata;
             case "pending":

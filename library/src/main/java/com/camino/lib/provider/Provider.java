@@ -174,7 +174,7 @@ public interface Provider {
         /**
          * A list (possibly empty) of matches for the query.
          */
-        java.util.ArrayList<Metadata> matches();
+        List<Metadata> matches();
 
         /**
          * Used for paging. If true, indicates there is another page of results
@@ -193,7 +193,7 @@ public interface Provider {
         /**
          * The files and (direct) subfolders in the folder.
          */
-        java.util.List<Metadata> entries();
+        List<Metadata> entries();
 
         /**
          * Pass the cursor into {@link Provider#listFolderContinue(String)} to

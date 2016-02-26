@@ -24,12 +24,13 @@ import android.util.Log;
 
 import com.camino.lib.provider.Provider;
 import com.camino.lib.provider.imagepipeline.OkHttpNetworkFetcher;
-import com.camino.lib.provider.imagepipeline.RetrofitCallbackHandler;
+import com.camino.lib.provider.imagepipeline.callbacks.RetrofitCallbackHandler;
 import com.camino.lib.provider.lyve.request.Client;
 import com.camino.lib.provider.lyve.request.DownloadRequest;
 import com.camino.lib.provider.lyve.request.ListFolderRequest;
 import com.camino.lib.provider.lyve.request.LoginRequest;
 import com.camino.lib.provider.lyve.request.SearchRequest;
+import com.camino.lib.provider.lyve.request.ThumbnailRequest;
 import com.camino.lib.provider.lyve.response.ListFolderResponse;
 import com.camino.lib.provider.lyve.response.SearchResponse;
 import com.camino.lib.provider.lyve.response.Token;
