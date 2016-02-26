@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.camino.lib.provider.imagepipeline;
+package com.camino.lib.provider.imagepipeline.calls;
 
 import android.net.Uri;
 import android.os.SystemClock;
@@ -22,11 +22,12 @@ import android.util.Log;
 
 import com.camino.lib.provider.Provider;
 import com.camino.lib.provider.dropbox.DbxProvider;
+import com.camino.lib.provider.imagepipeline.OkHttpNetworkFetcher;
 import com.camino.lib.provider.lyve.LyveCloudProvider;
 import com.camino.lib.provider.network.ServiceGenerator;
 import com.facebook.imagepipeline.producers.NetworkFetcher;
 
-import java.util.concurrent.ExecutorService;
+import java.io.IOException;
 
 import okhttp3.CacheControl;
 import okhttp3.MediaType;
@@ -36,85 +37,85 @@ import okhttp3.RequestBody;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
-public class LyveCloudFilesCall implements OkHttpNetworkFetcher.Call {
-    private static final String TAG = LyveCloudFilesCall.class.getSimpleName();
+public class LyveCloudOkHttpDownloadCall implements OkHttpNetworkFetcher.Call {
+    private static final String TAG = LyveCloudOkHttpDownloadCall.class.getSimpleName();
 
     private final OkHttpNetworkFetcher.HttpNetworkFetchState mFetchState;
     private final NetworkFetcher.Callback mCallback;
     private final Provider mProvider;
     private final okhttp3.Call mHttpCall;
     private final String path;
-    private final ExecutorService mExecutor;
 
-    LyveCloudFilesCall(final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState,
-                       final NetworkFetcher.Callback callback,
-                       Provider provider,
-                       final OkHttpClient mOkHttpClient) {
+    public LyveCloudOkHttpDownloadCall(final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState,
+                                       final NetworkFetcher.Callback callback,
+                                       Provider provider,
+                                       final OkHttpClient mOkHttpClient) {
         this.mFetchState = fetchState;
         this.mCallback = callback;
         this.mProvider = provider;
-        mExecutor = mOkHttpClient.dispatcher().executorService();
         Uri uri = fetchState.getUri();
         path = uri.getPath().substring(1);
-        Request request = null;
-        if (provider instanceof LyveCloudProvider) {
-            request = createLyveCloudRequest(uri);
-        } else if (provider instanceof DbxProvider) {
-            request = createDropboxRequest(uri);
-        }
-        Log.d(TAG, path + ": creating call...");
+        Request request = createLyveCloudRequest(uri);
         mHttpCall = mOkHttpClient.newCall(request);
         Log.d(TAG, path + ": created call");
+        mFetchState.responseTime = SystemClock.elapsedRealtime();
     }
 
     @Override
     public void run() {
+        Log.d(TAG, path + ": running call..");
         try {
-            Log.d(TAG, path + ": running call..");
             Response response = mHttpCall.execute();
-            if (!response.isSuccessful()) {
-                Log.d(TAG, path + ": response failed! " + response.message());
-                return;
-            }
             mFetchState.responseTime = SystemClock.elapsedRealtime();
-            Log.d(TAG, path + ": got response in " + (mFetchState.responseTime - mFetchState.submitTime) + " ms");
+
+            if (!response.isSuccessful()) {
+                throw new IOException("Unexpected HTTP response " + response);
+            }
+
             final ResponseBody body = response.body();
+            final int length = (int) response.body().contentLength();
+            Log.d(TAG, path + ": got " + length + " bytes in " + (mFetchState.responseTime - mFetchState.submitTime) + " ms");
             try {
-                long contentLength = body.contentLength();
-                mCallback.onResponse(body.byteStream(), (int) contentLength);
-                long t = SystemClock.elapsedRealtime() - mFetchState.submitTime;
-                Log.d(TAG, path + ": response consumed in " + t + " ms");
+                mCallback.onResponse(body.byteStream(), length);
+                Log.d(TAG, path + ": callback took " + (SystemClock.elapsedRealtime() - mFetchState.responseTime) + " ms");
             } finally {
                 try {
                     body.close();
                 } catch (Exception e) {
-                    Log.e(TAG, path + ": Exception when closing response body", e);
+                    // ignore
                 }
             }
+        } catch (IOException e) {
+            if (!mHttpCall.isCanceled()) {
+                Log.d(TAG, path + ": http call failed in " + (SystemClock.elapsedRealtime() - mFetchState.submitTime) + " ms,  " + e.getMessage());
+                mCallback.onFailure(e);
+            }
         } catch (Exception e) {
-            long t = SystemClock.elapsedRealtime() - mFetchState.submitTime;
-            Log.d(TAG, path + ": response failed in " + t + " ms,  " + e.getMessage());
-            mCallback.onFailure(e);
-            e.printStackTrace();
+            Log.e(TAG, path + ": http call fatal error in " + (SystemClock.elapsedRealtime() - mFetchState.submitTime) + " ms,  " + e.getMessage());
+            throw new RuntimeException("Fatal error: ", e);
         }
+    }
+
+    private void handleException(Exception e) {
     }
 
     @Override
     public void cancel() {
-        long t = SystemClock.elapsedRealtime() - mFetchState.submitTime;
-        Log.d(TAG, path + ": cancel response in " + t + " ms");
-        mHttpCall.cancel();
-        mCallback.onCancellation();
+        try {
+            mHttpCall.cancel();
+        } finally {
+            // We have to deliver cancel notification immediately after canceling http call.
+            mCallback.onCancellation();
+        }
     }
 
     private Request createLyveCloudRequest(Uri uri) {
         String size = uri.getQueryParameter("size");
         String format = uri.getQueryParameter("format");
-        String cmd = "";
-        String args = "";
-        // TODO: thumbnail API does not work!!
-//        if (size != null || foarmat != null) {
-        if (false) {
+        String cmd = "/v1/files/download";
+        String args = String.format("{\"path\":\"%s\"}", path);
+
+        if (size != null || format != null) {
             cmd = "/v1/files/get_thumbnail";
             if (format == null) {
                 format = "jpeg";
@@ -122,14 +123,18 @@ public class LyveCloudFilesCall implements OkHttpNetworkFetcher.Call {
             if (size == null) {
                 size = "w64h64";
             }
-            args = String.format("{\n" +
-                    "  \"path\": \"%s\",\n" +
-                    "  \"format\": \"%s\",\n" +
-                    "  \"size\": \"%s\"\n" +
+            args = String.format("{" +
+                    "\"path\":\"%s\"," +
+                    "\"format\":\"%s\"," +
+                    "\"size\":\"%s\"" +
                     "}", path, format, size);
-        } else {
-            cmd = "/v1/files/download";
-            args = String.format("{\"path\":\"%s\"}", path);
+//            String args1 = new ThumbnailRequest(path, "jpeg", size).toString();
+//            if (args.equals(args1)) {
+//                Log.d(TAG, "ok");
+//            } else {
+//                Log.d(TAG, "KO");
+//            }
+//            args = args1;
         }
 
         Request request = new Request.Builder()
@@ -137,9 +142,10 @@ public class LyveCloudFilesCall implements OkHttpNetworkFetcher.Call {
                 .url(ServiceGenerator.API_BASE_URL + cmd)
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + mProvider.getAccessToken())
-                .header("Accept", "*/*")
+                .header("Connection", "Keep-Alive")
                 .method("POST", RequestBody.create(MediaType.parse(""), args))
                 .build();
+        Log.d(TAG, args);
 
         return request;
     }

@@ -22,13 +22,13 @@ import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 
-import com.camino.lib.provider.dropbox.DbxProvider;
-import com.camino.lib.provider.imagepipeline.ConfigFactory;
-import com.camino.lib.provider.local.MediaProvider;
-import com.camino.lib.provider.lyve.LyveCloudProvider;
 import com.facebook.drawee.backends.pipeline.Fresco;
 import com.facebook.imagepipeline.core.ImagePipelineConfig;
 import com.facebook.stetho.Stetho;
+import com.seagate.alto.provider.dropbox.DbxProvider;
+import com.seagate.alto.provider.imagepipeline.ConfigFactory;
+import com.seagate.alto.provider.local.MediaProvider;
+import com.seagate.alto.provider.lyve.LyveCloudProvider;
 
 /**
  * The collection of available providers.

@@ -14,12 +14,13 @@
  * limitations under the License.
  */
 
-package com.camino.lib.provider.imagepipeline;
+package com.camino.lib.provider.imagepipeline.callbacks;
 
 import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.camino.lib.provider.imagepipeline.OkHttpNetworkFetcher;
 import com.facebook.imagepipeline.producers.BaseProducerContextCallbacks;
 import com.facebook.imagepipeline.producers.NetworkFetcher;
 

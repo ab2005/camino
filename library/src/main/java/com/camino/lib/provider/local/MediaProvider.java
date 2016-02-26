@@ -39,7 +39,10 @@ import retrofit2.Call;
  * Local image provider.
  */
 public class MediaProvider implements Provider {
-    final public static String[] IMAGE_FIELDS = {
+    private static final String TAG = MediaProvider.class.getName();
+    final private static Uri externalContentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+    final private static Uri internalContentUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
+    final private static String[] IMAGE_FIELDS = {
             MediaStore.Images.Media._ID,
             MediaStore.Images.Media.DATA,
             MediaStore.Images.Media.SIZE,
@@ -61,9 +64,6 @@ public class MediaProvider implements Provider {
             MediaStore.Images.Media.BUCKET_ID,
             MediaStore.Images.Media.BUCKET_DISPLAY_NAME
     };
-    private static final String TAG = MediaProvider.class.getName();
-    final private static Uri externalContentUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-    final private static Uri internalContentUri = MediaStore.Images.Media.INTERNAL_CONTENT_URI;
 
 //    private static ContentObserver watcher = new ContentObserver(new Handler()) {
 //        @Override
@@ -83,11 +83,6 @@ public class MediaProvider implements Provider {
 //    static public void stopWatchingMediaStore() {
 //        Providers.getContext().getContentResolver().unregisterContentObserver(watcher);
 //    }
-
-    /*package*/
-    public MediaProvider() {
-        // nothing
-    }
 
     static public List<FileMetadata> getLocalMediaItems(Context ctx) {
         List<FileMetadata> items = new LinkedList<>();
@@ -142,6 +137,16 @@ public class MediaProvider implements Provider {
         }
     }
 
+    /*package*/
+    public MediaProvider() {
+        // nothing
+    }
+
+    @Override
+    public void setAccessToken(String token) {
+        // TODO: check permissions
+    }
+
     @Override
     public FolderMetadata createFolder(@NonNull String path) throws ProviderException {
         return null;
@@ -191,6 +196,7 @@ public class MediaProvider implements Provider {
 
     @Override
     public Metadata delete(@NonNull String path) throws ProviderException {
+        // TODO:
         throw new UnsupportedOperationException();
     }
 
@@ -201,6 +207,20 @@ public class MediaProvider implements Provider {
      */
     @Override
     public Call<ResponseBody> download(String path) throws ProviderException {
+        // TODO:
+        throw new UnsupportedOperationException();
+    }
+
+    /**
+     * Download thumbnail of a file at a given path.
+     *
+     * @param path
+     * @param format
+     * @param size
+     */
+    @Override
+    public Call<ResponseBody> downloadThumbnail(String path, String format, String size) throws ProviderException {
+        // TODO:
         throw new UnsupportedOperationException();
     }
 
@@ -231,11 +251,6 @@ public class MediaProvider implements Provider {
     }
 
     @Override
-    public void setAccessToken(String token) {
-        // TODO: check permissions
-    }
-
-    @Override
     public String getDomain() {
         return "local";
     }
@@ -261,7 +276,7 @@ public class MediaProvider implements Provider {
         public FileMetadataImpl(Object[] item) {
             try {
                 mId = "" + item[0];
-                mSize = item[8] != null && item[9] != null ? new Size(((Long) item[8]).intValue(), ((Long) item[9]).intValue()) : new Size(0, 0);
+                mSize = item[8] != null && item[9] != null ? new Size(((Long) item[8]).intValue(), ((Long) item[9]).intValue()) : new Size (0, 0);
                 mTimeTaken = item[15] != null ? new Date((Long) item[15]) : new Date();
                 mLatitude = item[13] != null ? (double) item[13] : 0.;
                 mLongtitude = item[14] != null ? (double) item[14] : 0.;

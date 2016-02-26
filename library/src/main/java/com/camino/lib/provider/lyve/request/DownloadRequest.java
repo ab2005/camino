@@ -16,6 +16,7 @@
 
 package com.camino.lib.provider.lyve.request;
 
+import com.google.gson.Gson;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
@@ -28,8 +29,7 @@ public class DownloadRequest {
         this.path = path;
     }
 
-    @Override
     public String toString() {
-        return "{\"path\":\"" + path + "\"}";
+        return new Gson().toJson(this);
     }
 }

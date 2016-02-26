@@ -62,4 +62,17 @@ public class SearchRequest {
         return this;
     }
 
+    public SearchRequest withIcludeMediaInfo(boolean b) {
+        this.includeMediaInfo = b;
+        return this;
+    }
+
+    public SearchRequest withIcludeFullPath(boolean b) {
+        this.includeFullPath = b;
+        return this;
+    }
+
+    public String toString() {
+        return new Gson().toJson(this);
+    }
 }

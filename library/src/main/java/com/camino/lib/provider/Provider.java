@@ -48,15 +48,29 @@ public interface Provider {
      */
     ListFolderResult listFolder(@NonNull String path) throws ProviderException;
 
+//    /**
+//     * Returns the contents of a folder not including deleted items, mediainfo and child count.
+//     *
+//     * @param path The path components of the folder to list.
+//     * @param limit The maximum number of results to return in this call.
+//     * @param includeDeleted Whether or not to include deleted files and folders in the listing.
+//     *                       Default is false.
+//     * @param includeMediaInfo Whether or not to include media info in the listing. Default is false
+//     * @param includeChildCount Whether or not to include `child_count` for folder entries;
+//     *                          default is `false`; setting this to `true` may result in much slower listings
+//     * @return ListFolderResult with the list of Metadata items.
+//     * @throws ProviderException
+//     */
+//    ListFolderResult listFolder(@NonNull String path, int limit, boolean includeDeleted, boolean includeMediaInfo, boolean includeChildCount) throws ProviderException;
+
     /**
      * Once a cursor has been retrieved from {@link Provider#listFolder(String)},
-     * use this to paginate through all files and retrieve updates to the
-     * folder.
+     * use this to paginate through all files and retrieve updates to the folder.
      */
     ListFolderResult listFolderContinue(@NonNull String cursor) throws ProviderException;
 
     /**
-     * Searches for files and folders.
+     * Searches for files and folders with default settings.
      */
     public SearchResult search(@NonNull String path, @NonNull String query) throws ProviderException;
 
@@ -113,19 +127,18 @@ public interface Provider {
      */
     String getDomain();
 
-    public enum SearchMode {
-        /**
-         * Search file and folder names.
-         */
-        filename,
-        /**
-         * Search file and folder names as well as file contents.
-         */
-        filenameAndContent,
-        /**
-         * Search for deleted file and folder names.
-         */
-        deletedFilename;
+    /**
+     * The base exception thrown by Provider API calls.
+     */
+    public class ProviderException extends Exception {
+        public ProviderException(String message, Throwable e) {
+            super(message, e);
+        }
+
+        public ProviderException(Exception e) {
+            super(e);
+        }
+
     }
 
     interface FolderMetadata extends Metadata {
@@ -161,7 +174,7 @@ public interface Provider {
         /**
          * A list (possibly empty) of matches for the query.
          */
-        List<Metadata> matches();
+        java.util.ArrayList<Metadata> matches();
 
         /**
          * Used for paging. If true, indicates there is another page of results
@@ -227,12 +240,12 @@ public interface Provider {
          * this should only be used for display purposes (such as sorting) and
          * not, for example, to determine if a file has changed or not.
          */
-        Date clientModified();
+        java.util.Date clientModified();
 
         /**
          * The last time the file was modified on this account.
          */
-        Date serverModified();
+        java.util.Date serverModified();
 
         /**
          * A unique identifier for the current revision of a file. This field is
@@ -266,6 +279,14 @@ public interface Provider {
 
     public interface MediaInfo {
         /**
+         * The discriminating tag type for {@link MediaInfo}.
+         */
+        public enum Tag {
+            pending,
+            metadata  // MediaMetadata
+        }
+
+        /**
          * The discriminating tag for this instance.
          */
         Tag tag();
@@ -274,14 +295,6 @@ public interface Provider {
          * A {@link Metadata} for a photo or video.
          */
         MediaMetadata metadata();
-
-        /**
-         * The discriminating tag type for {@link MediaInfo}.
-         */
-        public enum Tag {
-            pending,
-            metadata  // MediaMetadata
-        }
     }
 
     /**
@@ -306,24 +319,7 @@ public interface Provider {
         /**
          * The timestamp when the photo/video is taken.
          */
-        Date timeTaken();
-    }
-
-    /**
-     * The base exception thrown by Provider API calls.
-     */
-    public class ProviderException extends Exception {
-        public ProviderException(String message, Throwable e) {
-            super(message, e);
-        }
-
-        public ProviderException(Exception e) {
-            super(e);
-        }
-
-        public ProviderException() {
-
-        }
+        java.util.Date timeTaken();
     }
 
     /**
@@ -331,13 +327,10 @@ public interface Provider {
      * Copied from {@linkplain android.util.Size}
      */
     public final class Size {
-        private final int mWidth;
-        private final int mHeight;
-
         /**
          * Create a new immutable Size instance.
          *
-         * @param width  The width of the size, in pixels
+         * @param width The width of the size, in pixels
          * @param height The height of the size, in pixels
          */
         public Size(int width, int height) {
@@ -345,66 +338,8 @@ public interface Provider {
             mHeight = height;
         }
 
-        private static NumberFormatException invalidSize(String s) {
-            throw new NumberFormatException("Invalid Size: \"" + s + "\"");
-        }
-
-        /**
-         * Parses the specified string as a size value.
-         * <p>
-         * The ASCII characters {@code \}{@code u002a} ('*') and
-         * {@code \}{@code u0078} ('x') are recognized as separators between
-         * the width and height.</p>
-         * <p>
-         * For any {@code Size s}: {@code Size.parseSize(s.toString()).equals(s)}.
-         * However, the method also handles sizes expressed in the
-         * following forms:</p>
-         * <p>
-         * "<i>width</i>{@code x}<i>height</i>" or
-         * "<i>width</i>{@code *}<i>height</i>" {@code => new Size(width, height)},
-         * where <i>width</i> and <i>height</i> are string integers potentially
-         * containing a sign, such as "-10", "+7" or "5".</p>
-         * <p/>
-         * <pre>{@code
-         * Size.parseSize("3*+6").equals(new Size(3, 6)) == true
-         * Size.parseSize("-3x-6").equals(new Size(-3, -6)) == true
-         * Size.parseSize("4 by 3") => throws NumberFormatException
-         * }</pre>
-         *
-         * @param string the string representation of a size value.
-         * @return the size value represented by {@code string}.
-         * @throws NumberFormatException if {@code string} cannot be parsed
-         *                               as a size value.
-         * @throws NullPointerException  if {@code string} was {@code null}
-         */
-        public static Size parseSize(String string) throws NumberFormatException {
-            if (string.startsWith("w")) {
-                int ph = string.indexOf('h');
-                if (ph > 1) {
-                    return new Size(Integer.parseInt(string.substring(1, ph)),
-                            Integer.parseInt(string.substring(ph + 1)));
-                } else {
-                    throw invalidSize(string);
-                }
-            }
-            int sep_ix = string.indexOf('*');
-            if (sep_ix < 0) {
-                sep_ix = string.indexOf('x');
-            }
-            if (sep_ix < 0) {
-                throw invalidSize(string);
-            }
-            try {
-                return new Size(Integer.parseInt(string.substring(0, sep_ix)),
-                        Integer.parseInt(string.substring(sep_ix + 1)));
-            } catch (NumberFormatException e) {
-                throw invalidSize(string);
-            }
-        }
-
         /**
          * Get the width of the size (in pixels).
-         *
          * @return width
          */
         public int getWidth() {
@@ -413,7 +348,6 @@ public interface Provider {
 
         /**
          * Get the height of the size (in pixels).
-         *
          * @return height
          */
         public int getHeight() {
@@ -457,6 +391,64 @@ public interface Provider {
             return mWidth + "x" + mHeight;
         }
 
+        private static NumberFormatException invalidSize(String s) {
+            throw new NumberFormatException("Invalid Size: \"" + s + "\"");
+        }
+
+        /**
+         * Parses the specified string as a size value.
+         * <p>
+         * The ASCII characters {@code \}{@code u002a} ('*') and
+         * {@code \}{@code u0078} ('x') are recognized as separators between
+         * the width and height.</p>
+         * <p>
+         * For any {@code Size s}: {@code Size.parseSize(s.toString()).equals(s)}.
+         * However, the method also handles sizes expressed in the
+         * following forms:</p>
+         * <p>
+         * "<i>width</i>{@code x}<i>height</i>" or
+         * "<i>width</i>{@code *}<i>height</i>" {@code => new Size(width, height)},
+         * where <i>width</i> and <i>height</i> are string integers potentially
+         * containing a sign, such as "-10", "+7" or "5".</p>
+         *
+         * <pre>{@code
+         * Size.parseSize("3*+6").equals(new Size(3, 6)) == true
+         * Size.parseSize("-3x-6").equals(new Size(-3, -6)) == true
+         * Size.parseSize("4 by 3") => throws NumberFormatException
+         * }</pre>
+         *
+         * @param string the string representation of a size value.
+         * @return the size value represented by {@code string}.
+         *
+         * @throws NumberFormatException if {@code string} cannot be parsed
+         * as a size value.
+         * @throws NullPointerException if {@code string} was {@code null}
+         */
+        public static Size parseSize(String string) throws NumberFormatException {
+            if (string .startsWith("w")) {
+                int ph = string.indexOf('h');
+                if (ph > 1) {
+                    return new Size(Integer.parseInt(string.substring(1, ph)),
+                            Integer.parseInt(string.substring(ph + 1)));
+                } else {
+                    throw invalidSize(string);
+                }
+            }
+            int sep_ix = string.indexOf('*');
+            if (sep_ix < 0) {
+                sep_ix = string.indexOf('x');
+            }
+            if (sep_ix < 0) {
+                throw invalidSize(string);
+            }
+            try {
+                return new Size(Integer.parseInt(string.substring(0, sep_ix)),
+                        Integer.parseInt(string.substring(sep_ix + 1)));
+            } catch (NumberFormatException e) {
+                throw invalidSize(string);
+            }
+        }
+
         /**
          * {@inheritDoc}
          */
@@ -465,13 +457,16 @@ public interface Provider {
             // assuming most sizes are <2^16, doing a rotate will give us perfect hashing
             return mHeight ^ ((mWidth << (Integer.SIZE / 2)) | (mWidth >>> (Integer.SIZE / 2)));
         }
+
+        private final int mWidth;
+        private final int mHeight;
     }
 
 
     public class DefaultFileMetadata implements FileMetadata {
         public final String id;
-        final Date clientModified;
-        final Date serverModified;
+        final java.util.Date clientModified;
+        final java.util.Date serverModified;
         final String rev;
         final long size;
         final MediaInfo mediaInfo;

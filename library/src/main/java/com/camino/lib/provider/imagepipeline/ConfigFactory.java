@@ -40,8 +40,8 @@ import okhttp3.OkHttpClient;
  * with OkHttp as a backend for {@link com.camino.lib.provider.Provider} calls.
  */
 public class ConfigFactory {
-    public final static int MAX_REQUEST_PER_TIME = 164;
     private static final String IMAGE_PIPELINE_CACHE_DIR = "imagepipeline_cache";
+    public final static int MAX_REQUEST_PER_TIME = 164;
 
     /**
      * Default config with {@link OkHttpNetworkFetcher} as network backend.
@@ -57,7 +57,7 @@ public class ConfigFactory {
                 .build();
 
         OkHttpClient httpClient = new OkHttpClient.Builder()
-                //   .addInterceptor(new StethoInterceptor())
+             //   .addInterceptor(new StethoInterceptor())
                 .build();
 
         NetworkFetcher networkFetcher = new OkHttpNetworkFetcher(httpClient);

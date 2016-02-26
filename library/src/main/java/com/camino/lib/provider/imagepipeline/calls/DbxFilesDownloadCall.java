@@ -14,13 +14,14 @@
  * limitations under the License.
  */
 
-package com.camino.lib.provider.imagepipeline;
+package com.camino.lib.provider.imagepipeline.calls;
 
 import android.net.Uri;
 import android.os.SystemClock;
 import android.util.Log;
 
 import com.camino.lib.provider.dropbox.DbxProvider;
+import com.camino.lib.provider.imagepipeline.OkHttpNetworkFetcher;
 import com.dropbox.core.DbxDownloader;
 import com.dropbox.core.DbxException;
 import com.dropbox.core.v2.DbxFiles;
@@ -28,14 +29,14 @@ import com.facebook.imagepipeline.producers.NetworkFetcher;
 
 import java.io.IOException;
 
-class DbxFilesCall implements OkHttpNetworkFetcher.Call {
-    private static final String TAG = "DbxFilesCall";
+public class DbxFilesDownloadCall implements OkHttpNetworkFetcher.Call {
+    private static final String TAG = "DbxFilesDownloadCall";
     private final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState;
     private final NetworkFetcher.Callback callback;
     private final DbxProvider provider;
     private DbxDownloader<DbxFiles.FileMetadata> downloader = null;
 
-    DbxFilesCall(final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState, final NetworkFetcher.Callback callback, DbxProvider provider) {
+    DbxFilesDownloadCall(final OkHttpNetworkFetcher.HttpNetworkFetchState fetchState, final NetworkFetcher.Callback callback, DbxProvider provider) {
         this.fetchState = fetchState;
         this.callback = callback;
         this.provider = provider;

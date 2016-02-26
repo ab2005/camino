@@ -48,5 +48,10 @@ public interface LyveCloudClient {
     Call<ResponseBody> download(@Body DownloadRequest req);
 
     @GET("v1/files/download")
-    Call<ResponseBody> checkout(@Query(value = "arg") String url);
+    Call<ResponseBody> checkout(@Query(value = "arg") DownloadRequest req);
+
+    @POST("v1/files/get_thumbnail")
+    @Streaming
+    Call<ResponseBody> thumbnail(@Body ThumbnailRequest req);
+
 }
