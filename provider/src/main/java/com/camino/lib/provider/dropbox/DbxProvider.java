@@ -32,7 +32,6 @@ import com.facebook.imagepipeline.producers.NetworkFetcher;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 
 import okhttp3.Request;
@@ -54,7 +53,6 @@ public class DbxProvider implements Provider {
         String userLocale = Locale.getDefault().toString();
         DbxRequestConfig requestConfig = new DbxRequestConfig("alto/v0.0.1", userLocale, OkHttpRequestor.Instance);
         mDbxClient = new DbxClientV2(requestConfig, token, DbxHost.Default);
-
     }
 
     @Override
@@ -390,21 +388,31 @@ public class DbxProvider implements Provider {
                     if (t == DbxFiles.MediaInfo.Tag.pending) return Tag.pending;
                     return null;
                 }
+
                 public MediaMetadata metadata() {
+                    if (item.mediaInfo == null || item.mediaInfo.getMetadata() == null) {
+                        return null;
+                    }
+
                     return new MediaMetadata() {
+                        Size NULL = new Size(0, 0);
                         @Override
                         public Size dimensions() {
+                            if (item.mediaInfo.getMetadata() == null) return NULL;
                             DbxFiles.Dimensions d = item.mediaInfo.getMetadata().dimensions;
+                            if (d == null) return NULL;
                             return new Size((int)d.width, (int)d.height);
                         }
 
                         @Override
                         public double latitude() {
+                            if (item.mediaInfo.getMetadata().location == null) return 0;
                             return item.mediaInfo.getMetadata().location.latitude;
                         }
 
                         @Override
                         public double longitude() {
+                            if (item.mediaInfo.getMetadata().location == null) return 0;
                             return item.mediaInfo.getMetadata().location.longitude;
                         }
 

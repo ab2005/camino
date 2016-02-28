@@ -87,6 +87,7 @@ dependencies {
     compile 'com.fasterxml.jackson.core:jackson-core:2.5.4'
     compile 'com.fasterxml.jackson.core:jackson-annotations:2.5.4'
 
+    compile 'io.realm:realm-android:0.87.5'
 }
 
 

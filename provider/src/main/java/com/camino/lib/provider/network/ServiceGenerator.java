@@ -18,11 +18,16 @@ package com.camino.lib.provider.network;
 
 import com.camino.lib.provider.dropbox.DbxCloudClient;
 import com.camino.lib.provider.lyve.LyveCloudClient;
+import com.google.gson.ExclusionStrategy;
+import com.google.gson.FieldAttributes;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
+import io.realm.RealmObject;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -50,9 +55,9 @@ public class ServiceGenerator {
     public static <S> S createService(String baseUrl, Class<S> serviceClass, final String authToken) {
         OkHttpClient.Builder httpClientBuilder = new OkHttpClient.Builder()
 //                .connectionPool(new ConnectionPool(MAX_CONNECTIONS, 5, TimeUnit.MINUTES))
+//                .addInterceptor(new StethoInterceptor())
+//                .sslSocketFactory(SSLConfig.getSSLSocketFactory())
                 .readTimeout(READ_TIMEOUT_SEC, TimeUnit.SECONDS);
-//                .addInterceptor(new StethoInterceptor());
-//                .sslSocketFactory(SSLConfig.getSSLSocketFactory());
 
         if (authToken != null) {
             httpClientBuilder.addInterceptor(new Interceptor() {
@@ -70,14 +75,29 @@ public class ServiceGenerator {
         }
 
         OkHttpClient client = httpClientBuilder.build();
-//        client.dispatcher().setMaxRequestsPerHost(MAX_CONNECTIONS);
-//        client.dispatcher().setMaxRequests(MAX_CONNECTIONS * 2);
+
+        Gson gson = new GsonBuilder()
+                .setExclusionStrategies(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return f.getDeclaringClass().equals(RealmObject.class);
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> clazz) {
+                        return false;
+                    }
+                })
+                .create();
+
         Retrofit.Builder builder =
                 new Retrofit.Builder()
                         .baseUrl(baseUrl)
                         .callbackExecutor(Executors.newCachedThreadPool())
-                        .addConverterFactory(GsonConverterFactory.create());
+                        .addConverterFactory(GsonConverterFactory.create(gson));
+
         Retrofit retrofit = builder.client(client).build();
+
         return retrofit.create(serviceClass);
     }
 
