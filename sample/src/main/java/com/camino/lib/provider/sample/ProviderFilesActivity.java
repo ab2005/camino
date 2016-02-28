@@ -13,6 +13,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.v7.widget.GridLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.webkit.MimeTypeMap;
 import android.widget.Toast;
 
@@ -28,6 +29,7 @@ import java.util.List;
 import butterknife.Bind;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.realm.Realm;
 
 
 /**
@@ -35,15 +37,20 @@ import butterknife.OnClick;
  * and upload/download files
  */
 public class ProviderFilesActivity extends AuthActivity {
+    private static final String TAG = "ProviderFilesActivity";
     public final static String EXTRA_PATH = "FilesActivity_Path";
     private static final int PICKFILE_REQUEST_CODE = 1;
+    private static final String EXTRA_DOMAIN = "FilesActivity_Domain";
 
-    private String mPath = "";
+    private String mDomain;
+    private String mPath;
+
     private ProviderFilesAdapter mFilesAdapter;
     private Provider mProvider;
 
-    public static Intent getIntent(Context context, String path) {
+    public static Intent getIntent(Context context, String domain, String path) {
         Intent filesIntent = new Intent(context, ProviderFilesActivity.class);
+        filesIntent.putExtra(ProviderFilesActivity.EXTRA_DOMAIN, domain);
         filesIntent.putExtra(ProviderFilesActivity.EXTRA_PATH, path);
         return filesIntent;
     }
@@ -63,14 +70,16 @@ public class ProviderFilesActivity extends AuthActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        String path = getIntent().getStringExtra(EXTRA_PATH);
-        if ("lyve".equals(path)) {
+        mDomain = getIntent().getStringExtra(EXTRA_DOMAIN);
+        if (Providers.SEAGATE.provider.getDomain().equals(mDomain)) {
             mProvider = Providers.SEAGATE.provider;
-        } else if ("lyve".equals(path)) {
+        } else if (Providers.DROPBOX.provider.getDomain().equals(mDomain)) {
             mProvider = Providers.DROPBOX.provider;
-        } else if ("local".equals(path)) {
+        } else if (Providers.LOCAL.provider.getDomain().equals(mDomain)) {
             mProvider = Providers.LOCAL.provider;
         }
+
+        mPath = getIntent().getStringExtra(EXTRA_PATH);
 
         setContentView(R.layout.activity_files);
         ButterKnife.bind(this);
@@ -78,7 +87,7 @@ public class ProviderFilesActivity extends AuthActivity {
         mFilesAdapter = new ProviderFilesAdapter(mProvider, new ProviderFilesAdapter.Callback() {
             @Override
             public void onFolderClicked(Provider.FolderMetadata folder) {
-                startActivity(ProviderFilesActivity.getIntent(ProviderFilesActivity.this, folder.pathLower()));
+                startActivity(ProviderFilesActivity.getIntent(ProviderFilesActivity.this, mDomain, folder.pathLower()));
             }
 
             @Override
@@ -117,6 +126,26 @@ public class ProviderFilesActivity extends AuthActivity {
             @Override
             public void onDataLoaded(Provider.ListFolderResult result) {
                 dialog.dismiss();
+                final Realm realm = Realm.getDefaultInstance();
+                final List<Provider.Metadata> items = result.entries();
+
+                realm.executeTransaction(new Realm.Transaction() {
+                    public void execute(Realm bgRealm) {
+                        // Copy elements to Realm to persist them.
+                        for (final Provider.Metadata item : items) {
+                            Photo.create(bgRealm, item);
+                        }
+                    }
+                }, new Realm.Transaction.Callback() {
+                    public void onSuccess() {
+                        Log.d(TAG, "Persist data OK");
+                    }
+                    public void onError(Exception e) {
+                        Log.d(TAG, "Failed to persist data " + e);
+                        e.printStackTrace();
+                    }
+                });
+
                 mFilesAdapter.setFiles(result.entries());
             }
 

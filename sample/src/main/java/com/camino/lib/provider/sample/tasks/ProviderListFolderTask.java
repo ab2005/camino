@@ -18,7 +18,7 @@ import java.io.IOException;
  */
 public class ProviderListFolderTask extends AsyncTask<String, Void, Provider.ListFolderResult> {
 
-    private static final boolean DEMO = false;
+    private static final boolean DEMO = true;
     private static final String AB_EMAIL = "abarilov@geagate.com";
     private static final String AB_PWD = "pitkelevo";
     public static final String AB_PHOTOS_FOLDER = "/Photos/2015-12-03";
